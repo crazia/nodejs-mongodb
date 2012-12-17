@@ -5,7 +5,7 @@ block content
   div.article
     div.created_at= article.created_at
     div.title= article.title
-    div.body= article.body
+    div.body!= article.body
     - each comment in article.comments
       div.comment
         div.person= comment.person
