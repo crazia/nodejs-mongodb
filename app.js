@@ -126,43 +126,58 @@ app.post ('/upload', function (req, res){
 
 	var newPath = __dirname + "/public/images/crazia" ; // 만약 login 이 되기 시작하면 crazia 대신 개인의 ID 로 처리할 수도 있다. 	 
 
+	fs.stat (newPath , function (err, stats) {
+		if (err) {
+			
+			fs.mkdirSync (__dirname + "/public/images");
+			fs.mkdirSync(newPath); // 지금은 여기에 임시로 만들어 두지만 나중에 회원 가입 하면 이미지 저장하는 디렉토리를 따로 만들어야 할 듯 		          	          
+			
+		}
+		
+		save_url = "/images/crazia/" + req.files.upload.name ;
+		         
+		// 이미 존재하는지 검사 하는 루틴 
+
+		fs.stat (newPath + "/" + req.files.upload.name , function (err , stats){
+			if (err) {
+				// 없다면 없으니 맘 편하게 쓰기 
+			  fs.readFile(req.files.upload.path , function (err, data) {
+				  fs.writeFile(newPath + "/" + req.files.upload.name , data , function (err) {
+
+					  res.send("<script>window.parent.CKEDITOR.tools.callFunction(" +
+		         req.param('CKEditorFuncNum') + ", \"" + save_url + "\");</script>");
+					               
+				  });// end of fs.writeFile
+			  }); // end of readFile
+				
+				
+			} else {
+				// 만약 존재한다면 쓸 파일 이름 변경 시켜야 함 
+				var regex = /(\w+).(\w+)/;
+				var match = regex.exec(req.files.upload.name);
+				save_url = "/images/crazia/" + match[1] + '_1.' + match[2] ; 
+
+								
+			  fs.readFile(req.files.upload.path , function (err, data) {
+				  fs.writeFile(newPath + "/" + match[1] + '_1.' + match[2] , data , function (err) {
+
+					  res.send("<script>window.parent.CKEDITOR.tools.callFunction(" +
+		         req.param('CKEditorFuncNum') + ", \"" + save_url + "\");</script>");
+					               
+				  });// end of fs.writeFile
+			  }); // end of readFile
+				
+			}// end of else
+		}); // end of fs.stat
+		         
+	});
+
 	// 이 부분은 나중에 따로 빼야 한다. Sync 방식을 썼기 때문에 한시적으로 여기에 둔 것임 
 	// 굳이 여기에 둔 이유는 images 디렉토리를 안 만들어 주고 이 소스를 사용할 시에 예상 되는 에러를 피하기 위해서임 
-	fs.mkdirSync (__dirname + "/public/images");
-	fs.mkdirSync(newPath); // 지금은 여기에 임시로 만들어 두지만 나중에 회원 가입 하면 이미지 저장하는 디렉토리를 따로 만들어야 할 듯 		          	          
+	// fs.mkdirSync (__dirname + "/public/images");
+	// fs.mkdirSync(newPath); // 지금은 여기에 임시로 만들어 두지만 나중에 회원 가입 하면 이미지 저장하는 디렉토리를 따로 만들어야 할 듯 		          	          
 
 	// save_url = newPath + '/' + req.files.upload.name ;
-	save_url = "/images/crazia/" + req.files.upload.name ;
-	          
-	          
- 	fs.readFile(req.files.upload.path, function (err, data) {
-    fs.writeFile(newPath + "/" + req.files.upload.name , data, function (err) {
-	    if (err) {
-		    // fs.writeFile 형식을 쓰면 거의 에러가 발생하지 않는다. 따라서 파일을 저장하기 전에 저장되는 위치에 같은 
-		    // 이름의 파일이 있는지 조사해야 한다. 
-		    console.log (err);
-		    var regex = /(\w+).(\w+)/;
-		    var match = regex.exec(req.files.upload.name);
-		    save_url = "/images/crazia/" + + match[1] + '_1.' + match[2] ; 
-
-		    fs.writeFile (save_url , data , function (err){
-			    res.send("<script>window.parent.CKEDITOR.tools.callFunction(" +
-		         req.param('CKEditorFuncNum') + ", \"" + save_url + "\");</script>");
-
-		    });
-		    
-		    
-	    } else {
-		    
-			    console.log (save_url);
-			    res.send("<script>window.parent.CKEDITOR.tools.callFunction(" +
-		         req.param('CKEditorFuncNum') + ", \"" + save_url + "\");</script>");
-		    
-	    }
-	               
-	               
-    });
-  });
 	          
 });
 
@@ -173,6 +188,10 @@ app.get('/users', user.list);
 
 var socket_name = __dirname + "/comjuck.sock" ; // 만약 login 이 되기 시작하면 crazia 대신 개인의 ID 로 처리할 수도 있다. 	 
 
-http.createServer(app).listen(socket_name, function(){
+// http.createServer(app).listen(socket_name, function(){
+//   console.log("Express server listening on port " + app.get('port'));
+// });
+
+http.createServer(app).listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
 });
