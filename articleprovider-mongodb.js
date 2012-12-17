@@ -28,7 +28,7 @@ ArticleProvider.prototype.findAll = function (callback) {
     this.getCollection(function (error, article_collection) {
 	if (error ) callback(error);
 	else {
-	    article_collection.find().toArray(function(error, results){
+	    article_collection.find().sort({created_at: -1}).toArray(function(error, results){
 		if (error) callback(error);
 		else callback(null, results);
 		});
