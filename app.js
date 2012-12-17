@@ -63,13 +63,13 @@ app.configure('development', function(){
 // 몽고디비를 도저히 제꺼에 설치할 수가 없더군요. 
 // grr 는 버추얼 머신에 띄워놓은 우분투 서버 입니다. 
 
- var articleProvider = new ArticleProvider('localhost', 27017);
+ var articleProvider = new ArticleProvider('grr', 27017);
 // var articleProvider = new ArticleProvider();
 
 app.get('/', function(req,res) {
 	    articleProvider.findAll(function(error, docs) {
 		res.render('index.jade', {
-		    title: 'Blog',
+		    title: 'Men\'s Nest',
 		    articles: docs
 		});
 	    });
@@ -125,65 +125,38 @@ app.post ('/upload', function (req, res){
 	var save_url ;
 
 	var newPath = __dirname + "/public/images/crazia" ; // 만약 login 이 되기 시작하면 crazia 대신 개인의 ID 로 처리할 수도 있다. 	 
+
+	// 이 부분은 나중에 따로 빼야 한다. Sync 방식을 썼기 때문에 한시적으로 여기에 둔 것임 
+	// 굳이 여기에 둔 이유는 images 디렉토리를 안 만들어 주고 이 소스를 사용할 시에 예상 되는 에러를 피하기 위해서임 
+	fs.mkdirSync (__dirname + "/public/images");
+	fs.mkdirSync(newPath); // 지금은 여기에 임시로 만들어 두지만 나중에 회원 가입 하면 이미지 저장하는 디렉토리를 따로 만들어야 할 듯 		          	          
+
 	// save_url = newPath + '/' + req.files.upload.name ;
 	save_url = "/images/crazia/" + req.files.upload.name ;
 	          
- 	// fs.rename (req.files.upload.path, save_url , function (err){
-	// 	if (err) {
-			
-	// 		console.log (err);
-	// 		var regex = /(\w+).(\w+)/;
-	// 		var match = regex.exec(req.files.upload.name);
-	// 		save_url = newPath + '/' + match[1] + '_1.' + match[2] ;
-	// 		fs.rename (req.files.upload.path , save_url , function (err){
-	// 			res.render('upload.jade',{ 
-	// 				funcNum: req.param ('CKEditorFuncNum'),
-	// 				save_url: save_url
-	// 			});
-
-	// 		} );
-	// 	}else {
-	// 		res.render('upload.jade',{ 
-	// 			funcNum: req.param ('CKEditorFuncNum'),
-	// 			save_url: save_url
-	// 		});
-			
-	// 	}
-
-	// 	// res.render("<script>window.parent.CKEDITOR.tools.callFunction(" +
-	// 	//          req.param('CKEditorFuncNum') + "," + save_url + ", '업로드완료');</script>");
-	// 	console.log ('upload complete');
-	// });
 	          
  	fs.readFile(req.files.upload.path, function (err, data) {
     fs.writeFile(newPath + "/" + req.files.upload.name , data, function (err) {
 	    if (err) {
-		    
+		    // fs.writeFile 형식을 쓰면 거의 에러가 발생하지 않는다. 따라서 파일을 저장하기 전에 저장되는 위치에 같은 
+		    // 이름의 파일이 있는지 조사해야 한다. 
 		    console.log (err);
 		    var regex = /(\w+).(\w+)/;
 		    var match = regex.exec(req.files.upload.name);
-		    save_url = newPath + '/' + match[1] + '_1.' + match[2] ;
+		    save_url = "/images/crazia/" + + match[1] + '_1.' + match[2] ; 
+
 		    fs.writeFile (save_url , data , function (err){
-			    res.render('upload.jade',{ 
-				    funcNum: req.param ('CKEditorFuncNum'),
-				    save_url: save_url
-			    });
+			    res.send("<script>window.parent.CKEDITOR.tools.callFunction(" +
+		         req.param('CKEditorFuncNum') + ", \"" + save_url + "\");</script>");
+
 		    });
 		    
 		    
 	    } else {
 		    
 			    console.log (save_url);
-		    
-		    res.send("<script>window.parent.CKEDITOR.tools.callFunction(" +
+			    res.send("<script>window.parent.CKEDITOR.tools.callFunction(" +
 		         req.param('CKEditorFuncNum') + ", \"" + save_url + "\");</script>");
-
-		    //res.send("<script> alert(\'hello\');</script>");
-		    
-			    // res.render('upload.jade',{ 
-				  //   funcNum: req.param ('CKEditorFuncNum'),
-				  //   save_url: save_url
-			    // });
 		    
 	    }
 	               
@@ -198,6 +171,8 @@ app.post ('/upload', function (req, res){
 
 app.get('/users', user.list);
 
-http.createServer(app).listen(app.get('port'), function(){
+var socket_name = __dirname + "/comjuck.sock" ; // 만약 login 이 되기 시작하면 crazia 대신 개인의 ID 로 처리할 수도 있다. 	 
+
+http.createServer(app).listen(socket_name, function(){
   console.log("Express server listening on port " + app.get('port'));
 });
