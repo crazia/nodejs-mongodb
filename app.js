@@ -63,7 +63,7 @@ app.configure('development', function(){
 // 몽고디비를 도저히 제꺼에 설치할 수가 없더군요. 
 // grr 는 버추얼 머신에 띄워놓은 우분투 서버 입니다. 
 
- var articleProvider = new ArticleProvider('grr', 27017);
+ var articleProvider = new ArticleProvider('localhost', 27017);
 // var articleProvider = new ArticleProvider();
 
 app.get('/', function(req,res) {
