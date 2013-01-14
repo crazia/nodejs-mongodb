@@ -9,8 +9,11 @@ Modify for current Node.js (0.8.14) about Express + Node.js + Mongodb
 ## Usage
 
 $ git clone git://github.com/crazia/nodejs-mongodb.git
+
 $ cd nodejs-mongodb
+
 $ npm install -d 
+
 $ node app.js 
 
 in Browser 
